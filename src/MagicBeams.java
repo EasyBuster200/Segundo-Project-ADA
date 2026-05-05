@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
+import java.util.TreeMap;
 
 record Beam(int r, int c, int length, int id, int[] direction) {
 }
@@ -36,7 +37,7 @@ public class MagicBeams {
     List<Integer> answer = new LinkedList<>();
     Set<Beam> chosenBeams = new HashSet<>();
     Queue<Beam> notProcessed = new LinkedList<>();
-    Map<Integer, Integer> degrees = new HashMap<>();
+    Map<Integer, Integer> degrees = new TreeMap<>();
     Map<Integer, Set<Beam>> adj = new HashMap<>();
 
     for (int c = L; c < N + L; c++) { // get beams in the collumns to be cleared
@@ -94,8 +95,25 @@ public class MagicBeams {
 
     }
 
-    //Loop choosen
-    //
+    boolean found = true;
+    while (found) {
+      found = false;
+      for (Map.Entry<Integer, Integer> e : degrees.entrySet()) {
+        if (e.getValue() == 0) {
+          found = true;
+          answer.add(e.getKey());
+          for (Beam beam : adj.get(e.getKey())) {
+            degrees.put(beam.id(), degrees.get(beam.id()) - 1);
+          }
+          degrees.remove(e.getKey());
+          break; 
+        }
+      }
+    }
+
+    if (!degrees.isEmpty()) {
+      throw new Exception("Disaster");
+    }
 
     return answer;
 
@@ -115,16 +133,6 @@ public class MagicBeams {
         return new int[] { 0, 0 };
     }
   }
-
-  private int getMinKey() {
-    int min = 0;
-    for(Integer node: degrees) {
-      if(degrees.get(node) == 0 && node < min)
-        min = node;
-    }
-
-    return min;
-  }
 }
 
 // My idea, have a way of knowing what beam blocks each beam, for our example
@@ -138,3 +146,6 @@ public class MagicBeams {
 // 6 is the lowest and has no blockers
 
 // result [3,4,1,5,6]
+
+// TODO: if we use a tree Map for the degrees then the keys are always sorted
+// from min to max, so we just need to find the first with degree = 0
