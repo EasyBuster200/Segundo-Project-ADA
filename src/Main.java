@@ -41,10 +41,7 @@ public class Main {
             }
 
             try {
-                long start = System.nanoTime();
                 List<Integer> answer = magic.solve();
-                long end = System.nanoTime();
-                System.err.println("Solve " + (t + 1) + " took: " + (end - start) / 1_000_000.0 + " ms");
 
                 for (int i = 0; i < answer.size() - 1; i++) {
                     System.out.print(answer.get(i) + " ");

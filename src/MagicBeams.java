@@ -42,7 +42,7 @@ public class MagicBeams {
     Map<Integer, Integer> degrees = new HashMap<>();
     Map<Integer, Set<Beam>> adj = new HashMap<>(); // Blocker -> Blocked
 
-    for (int c = L; c < N + L; c++) { // get beams in the collumns to be cleared
+    for (int c = L; c <= N + L; c++) { // get beams in the collumns to be cleared
       for (int r = 0; r < R; r++) {
         Beam beam = grid[r][c];
 
@@ -59,7 +59,7 @@ public class MagicBeams {
     }
 
     if (chosenBeams.isEmpty())
-      throw new Exception("False Alarm");
+      throw new Exception("False alarm");
 
     Set<Beam> processed = new HashSet<>();
     while (!notProcessed.isEmpty()) { // Get beams that block the already choosen beams
@@ -80,14 +80,17 @@ public class MagicBeams {
       while (blockerR >= 0 && blockerR < R && blockerC >= 0 && blockerC < C) {
         Beam blocker = grid[blockerR][blockerC];
 
-        if (blocker != null && blocker != beam) { // Do we need this != beam
+        if (blocker != null && blocker != beam) {
           notProcessed.add(blocker);
           chosenBeams.add(blocker);
 
           degrees.putIfAbsent(blocker.id(), 0);
           adj.putIfAbsent(blocker.id(), new HashSet<>());
 
-          degrees.put(beam.id(), degrees.get(beam.id()) + 1);
+          if (adj.get(blocker.id()).add(beam)) {
+            degrees.put(beam.id(), degrees.get(beam.id()) + 1); //! Had to make sure this only changes when its the first time we find the blocker
+            //Without the if would cause problems on blockers that follow the same path as the Beam
+          } 
           adj.get(blocker.id()).add(beam);
         }
 
@@ -108,7 +111,9 @@ public class MagicBeams {
       int id = zeroDegree.poll();
       answer.add(id);
       for (Beam blocked : adj.get(id)) {
-        int newDeg = degrees.merge(blocked.id(), -1, Integer::sum);
+        int newDeg = degrees.get(blocked.id()) - 1;
+        degrees.put(blocked.id(), newDeg); //changed because with int newDeg = degrees.pu(...) would give the old degree
+
         if (newDeg == 0)
           zeroDegree.add(blocked.id());
       }
@@ -139,17 +144,7 @@ public class MagicBeams {
   }
 }
 
-// My idea, have a way of knowing what beam blocks each beam, for our example
-// know that beam 1 is blocked by beam 4
-// then go through all the beams in order from the example 1 -> 6
-// always grab the lowest with no blockers and remove in our case 3 is the
-// lowest and has no blockers
-// next step 4 is the lowest and has no blockers
-// 1 is the lowest and has no blokcers
-// 5 is the lowest and has no blockers
-// 6 is the lowest and has no blockers
+//Current Mooshak Result: 1 test with Presentation Error 2 tests with Time Limit Exceeded 4 tests with Accepted 7 tests with Wrong Answer
+//solved : Presentation errors -> False alarm was False Alarm.
 
-// result [3,4,1,5,6]
-
-// TODO: if we use a tree Map for the degrees then the keys are always sorted
-// from min to max, so we just need to find the first with degree = 0
+//TODO: Can beams overlap?
