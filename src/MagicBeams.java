@@ -1,8 +1,10 @@
+import java.util.ArrayDeque;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.PriorityQueue;
 import java.util.Queue;
 import java.util.Set;
 import java.util.TreeMap;
@@ -36,9 +38,9 @@ public class MagicBeams {
   public List<Integer> solve() throws Exception {
     List<Integer> answer = new LinkedList<>();
     Set<Beam> chosenBeams = new HashSet<>();
-    Queue<Beam> notProcessed = new LinkedList<>();
-    Map<Integer, Integer> degrees = new TreeMap<>();
-    Map<Integer, Set<Beam>> adj = new HashMap<>();
+    Queue<Beam> notProcessed = new ArrayDeque<>();
+    Map<Integer, Integer> degrees = new HashMap<>();
+    Map<Integer, Set<Beam>> adj = new HashMap<>(); // Blocker -> Blocked
 
     for (int c = L; c < N + L; c++) { // get beams in the collumns to be cleared
       for (int r = 0; r < R; r++) {
@@ -95,20 +97,22 @@ public class MagicBeams {
 
     }
 
-    boolean found = true;
-    while (found) {
-      found = false;
-      for (Map.Entry<Integer, Integer> e : degrees.entrySet()) {
-        if (e.getValue() == 0) {
-          found = true;
-          answer.add(e.getKey());
-          for (Beam beam : adj.get(e.getKey())) {
-            degrees.put(beam.id(), degrees.get(beam.id()) - 1);
-          }
-          degrees.remove(e.getKey());
-          break; 
-        }
+    PriorityQueue<Integer> zeroDegree = new PriorityQueue<>();
+
+    for (Map.Entry<Integer, Integer> e : degrees.entrySet()) {
+      if (e.getValue() == 0)
+        zeroDegree.add(e.getKey());
+    }
+
+    while (!zeroDegree.isEmpty()) {
+      int id = zeroDegree.poll();
+      answer.add(id);
+      for (Beam blocked : adj.get(id)) {
+        int newDeg = degrees.merge(blocked.id(), -1, Integer::sum);
+        if (newDeg == 0)
+          zeroDegree.add(blocked.id());
       }
+      degrees.remove(id);
     }
 
     if (!degrees.isEmpty()) {
