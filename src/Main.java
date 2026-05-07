@@ -4,10 +4,6 @@ import java.io.InputStreamReader;
 import java.util.List;
 
 public class Main {
-    static int R, C;
-    static int[] beamRow, beamCol, beamLen;
-    static char[] beamDir;
-
     public static void main(String[] args) throws Exception {
         BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
         int T = Integer.parseInt(in.readLine());
@@ -24,11 +20,6 @@ public class Main {
             int B = Integer.parseInt(in.readLine());
 
             MagicBeams magic = new MagicBeams(R, C, N, L);
-
-            beamRow = new int[B + 1];
-            beamCol = new int[B + 1];
-            beamLen = new int[B + 1];
-            beamDir = new char[B + 1];
 
             for (int i = 1; i <= B; i++) {
                 String[] line3 = in.readLine().split(" ");

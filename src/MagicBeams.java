@@ -7,7 +7,6 @@ import java.util.Map;
 import java.util.PriorityQueue;
 import java.util.Queue;
 import java.util.Set;
-import java.util.TreeMap;
 
 record Beam(int r, int c, int length, int id, int[] direction) {
 }
@@ -42,56 +41,63 @@ public class MagicBeams {
     Map<Integer, Integer> degrees = new HashMap<>();
     Map<Integer, Set<Beam>> adj = new HashMap<>(); // Blocker -> Blocked
 
-    for (int c = L; c <= N + L; c++) { // get beams in the collumns to be cleared
+    /*
+     * First we get all the beams that are in the collumns to clear
+     */
+    for (int c = L; c <= N + L; c++) {
       for (int r = 0; r < R; r++) {
         Beam beam = grid[r][c];
 
         if (beam != null) {
           chosenBeams.add(beam);
           notProcessed.add(beam);
+          degrees.putIfAbsent(beam.id(), 0);
+          // adj.putIfAbsent(beam.id(), new HashSet<>()); //TODO: Don't need this?
         }
       }
     }
 
-    for (Beam beam : chosenBeams) {
-      degrees.putIfAbsent(beam.id(), 0);
-      adj.putIfAbsent(beam.id(), new HashSet<>());
-    }
-
+    // If there are no beams to remove then its a "False alarm"
     if (chosenBeams.isEmpty())
       throw new Exception("False alarm");
 
+    /*
+     * Next we need to find any beams that block selected beams
+     */
     Set<Beam> processed = new HashSet<>();
-    while (!notProcessed.isEmpty()) { // Get beams that block the already choosen beams
+    while (!notProcessed.isEmpty()) {
       Beam beam = notProcessed.poll();
 
-      if (processed.contains(beam))
-        continue;
+      // if (processed.contains(beam)) //TODO: Don't need this?
+      // continue;
 
-      processed.add(beam); // Don't need to check if contains, because add already checks it. (Sets can't
-                           // have duplicates
+      processed.add(beam);
 
+      // Calculate where the first possible position a blocker could be in (the first
+      // square after the end of the beam, in the beams direction).
       int tailR = beam.r() + (beam.length() - 1) * beam.direction()[0];
       int blockerR = tailR + beam.direction()[0];
 
       int tailC = beam.c() + (beam.length() - 1) * beam.direction()[1];
       int blockerC = tailC + beam.direction()[1];
 
+      // From that position walk the beams direction until the end of the board saving
+      // any blockers found.
       while (blockerR >= 0 && blockerR < R && blockerC >= 0 && blockerC < C) {
         Beam blocker = grid[blockerR][blockerC];
 
-        if (blocker != null && blocker != beam) {
+        if (blocker != null && blocker.id() != beam.id()) {
           notProcessed.add(blocker);
           chosenBeams.add(blocker);
 
           degrees.putIfAbsent(blocker.id(), 0);
           adj.putIfAbsent(blocker.id(), new HashSet<>());
 
+          // Only if the blocker hadn't already been added to the beam do we increase the
+          // degree of the beam
           if (adj.get(blocker.id()).add(beam)) {
-            degrees.put(beam.id(), degrees.get(beam.id()) + 1); //! Had to make sure this only changes when its the first time we find the blocker
-            //Without the if would cause problems on blockers that follow the same path as the Beam
-          } 
-          adj.get(blocker.id()).add(beam);
+            degrees.put(beam.id(), degrees.get(beam.id()) + 1);
+          }
         }
 
         blockerR += beam.direction()[0];
@@ -112,7 +118,8 @@ public class MagicBeams {
       answer.add(id);
       for (Beam blocked : adj.get(id)) {
         int newDeg = degrees.get(blocked.id()) - 1;
-        degrees.put(blocked.id(), newDeg); //changed because with int newDeg = degrees.pu(...) would give the old degree
+        degrees.put(blocked.id(), newDeg); // changed because with int newDeg = degrees.pu(...) would give the old
+                                           // degree
 
         if (newDeg == 0)
           zeroDegree.add(blocked.id());
@@ -144,7 +151,8 @@ public class MagicBeams {
   }
 }
 
-//Current Mooshak Result: 1 test with Presentation Error 2 tests with Time Limit Exceeded 4 tests with Accepted 7 tests with Wrong Answer
-//solved : Presentation errors -> False alarm was False Alarm.
+// Current Mooshak Result: 1 test with Presentation Error 2 tests with Time
+// Limit Exceeded 4 tests with Accepted 7 tests with Wrong Answer
+// solved : Presentation errors -> False alarm was False Alarm.
 
-//TODO: Can beams overlap?
+// TODO: Can beams overlap?
