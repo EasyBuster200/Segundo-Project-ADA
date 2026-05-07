@@ -1,4 +1,3 @@
-import java.util.ArrayDeque;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -37,22 +36,25 @@ public class MagicBeams {
   public List<Integer> solve() throws Exception {
     List<Integer> answer = new LinkedList<>();
     Set<Beam> chosenBeams = new HashSet<>();
-    Queue<Beam> notProcessed = new ArrayDeque<>();
+    Queue<Beam> notProcessed = new LinkedList<>();
     Map<Integer, Integer> degrees = new HashMap<>();
     Map<Integer, Set<Beam>> adj = new HashMap<>(); // Blocker -> Blocked
 
     /*
      * First we get all the beams that are in the collumns to clear
      */
-    for (int c = L; c <= N + L; c++) {
+    for (int c = L; c < N + L; c++) {
       for (int r = 0; r < R; r++) {
         Beam beam = grid[r][c];
 
         if (beam != null) {
           chosenBeams.add(beam);
-          notProcessed.add(beam);
+
+          if (!notProcessed.contains(beam))
+            notProcessed.add(beam);
+
           degrees.putIfAbsent(beam.id(), 0);
-          // adj.putIfAbsent(beam.id(), new HashSet<>()); //TODO: Don't need this?
+          adj.putIfAbsent(beam.id(), new HashSet<>());
         }
       }
     }
@@ -68,8 +70,8 @@ public class MagicBeams {
     while (!notProcessed.isEmpty()) {
       Beam beam = notProcessed.poll();
 
-      // if (processed.contains(beam)) //TODO: Don't need this?
-      // continue;
+      if (processed.contains(beam))
+        continue;
 
       processed.add(beam);
 
@@ -115,15 +117,18 @@ public class MagicBeams {
 
     while (!zeroDegree.isEmpty()) {
       int id = zeroDegree.poll();
+
       answer.add(id);
+
       for (Beam blocked : adj.get(id)) {
         int newDeg = degrees.get(blocked.id()) - 1;
-        degrees.put(blocked.id(), newDeg); // changed because with int newDeg = degrees.pu(...) would give the old
-                                           // degree
+        // changed because with int newDeg = degrees.pu(...) would give the old degree
+        degrees.put(blocked.id(), newDeg);
 
         if (newDeg == 0)
           zeroDegree.add(blocked.id());
       }
+
       degrees.remove(id);
     }
 
@@ -150,9 +155,3 @@ public class MagicBeams {
     }
   }
 }
-
-// Current Mooshak Result: 1 test with Presentation Error 2 tests with Time
-// Limit Exceeded 4 tests with Accepted 7 tests with Wrong Answer
-// solved : Presentation errors -> False alarm was False Alarm.
-
-// TODO: Can beams overlap?
