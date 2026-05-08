@@ -15,6 +15,10 @@ record Beam(int r, int c, int length, int id, int[] direction) {
 public class MagicBeams {
   private final int R, C, N, L;
   private Beam[][] grid;
+  private Queue<Beam> notProcessed = new ArrayDeque<>();
+  private Set<Integer> inQueue = new HashSet<>();
+  private Map<Integer, Integer> degrees = new HashMap<>();
+  private Map<Integer, Set<Integer>> adj = new HashMap<>(); // Blocker -> Blocked
 
   public MagicBeams(int R, int C, int N, int L) {
     this.R = R;
@@ -30,6 +34,15 @@ public class MagicBeams {
 
     for (int i = 0; i < l; i++) {
       grid[r][c] = beam;
+
+      if (L <= c && c < N + L) {
+        if (inQueue.add(beam.id()))
+          notProcessed.add(beam);
+
+        degrees.putIfAbsent(beam.id(), 0);
+        adj.putIfAbsent(beam.id(), new HashSet<>());
+      }
+
       r += direction[0];
       c += direction[1];
     }
@@ -37,28 +50,6 @@ public class MagicBeams {
 
   public List<Integer> solve() throws Exception {
     List<Integer> answer = new ArrayList<>();
-    Queue<Beam> notProcessed = new ArrayDeque<>();
-    Set<Integer> inQueue = new HashSet<>();
-    Map<Integer, Integer> degrees = new HashMap<>();
-    Map<Integer, Set<Integer>> adj = new HashMap<>(); // Blocker -> Blocked
-
-    /*
-     * First we get all the beams that are in the collumns to clear
-     */
-    for (int c = L; c < N + L; c++) {
-      for (int r = 0; r < R; r++) {
-        Beam beam = grid[r][c];
-
-        if (beam != null) {
-
-          if (inQueue.add(beam.id()))
-            notProcessed.add(beam);
-
-          degrees.putIfAbsent(beam.id(), 0);
-          adj.putIfAbsent(beam.id(), new HashSet<>());
-        }
-      }
-    }
 
     // If there are no beams to remove then its a "False alarm"
     if (inQueue.isEmpty())
@@ -84,6 +75,7 @@ public class MagicBeams {
         Beam blocker = grid[blockerR][blockerC];
 
         if (blocker != null && blocker.id() != beam.id()) {
+
           if (inQueue.add(blocker.id()))
             notProcessed.add(blocker);
 
