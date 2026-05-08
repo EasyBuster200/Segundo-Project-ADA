@@ -18,7 +18,7 @@ public class Main {
 
             int B = Integer.parseInt(in.readLine());
 
-            MagicBeams magic = new MagicBeams(R, C, N, L);
+            MagicBeams magic = new MagicBeams(R, C, N, L, B);
 
             for (int i = 1; i <= B; i++) {
                 String[] line3 = in.readLine().split(" ");
