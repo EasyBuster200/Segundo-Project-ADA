@@ -1,3 +1,5 @@
+import java.util.ArrayDeque;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -34,11 +36,11 @@ public class MagicBeams {
   }
 
   public List<Integer> solve() throws Exception {
-    List<Integer> answer = new LinkedList<>();
-    Set<Beam> chosenBeams = new HashSet<>();
-    Queue<Beam> notProcessed = new LinkedList<>();
+    List<Integer> answer = new ArrayList<>();
+    Queue<Beam> notProcessed = new ArrayDeque<>();
+    Set<Integer> inQueue = new HashSet<>();
     Map<Integer, Integer> degrees = new HashMap<>();
-    Map<Integer, Set<Beam>> adj = new HashMap<>(); // Blocker -> Blocked
+    Map<Integer, Set<Integer>> adj = new HashMap<>(); // Blocker -> Blocked
 
     /*
      * First we get all the beams that are in the collumns to clear
@@ -48,9 +50,8 @@ public class MagicBeams {
         Beam beam = grid[r][c];
 
         if (beam != null) {
-          chosenBeams.add(beam);
 
-          if (!notProcessed.contains(beam))
+          if (inQueue.add(beam.id()))
             notProcessed.add(beam);
 
           degrees.putIfAbsent(beam.id(), 0);
@@ -60,20 +61,14 @@ public class MagicBeams {
     }
 
     // If there are no beams to remove then its a "False alarm"
-    if (chosenBeams.isEmpty())
+    if (inQueue.isEmpty())
       throw new Exception("False alarm");
 
     /*
      * Next we need to find any beams that block selected beams
-     */
-    Set<Beam> processed = new HashSet<>();
+     */;
     while (!notProcessed.isEmpty()) {
       Beam beam = notProcessed.poll();
-
-      if (processed.contains(beam))
-        continue;
-
-      processed.add(beam);
 
       // Calculate where the first possible position a blocker could be in (the first
       // square after the end of the beam, in the beams direction).
@@ -89,15 +84,15 @@ public class MagicBeams {
         Beam blocker = grid[blockerR][blockerC];
 
         if (blocker != null && blocker.id() != beam.id()) {
-          notProcessed.add(blocker);
-          chosenBeams.add(blocker);
+          if (inQueue.add(blocker.id()))
+            notProcessed.add(blocker);
 
           degrees.putIfAbsent(blocker.id(), 0);
           adj.putIfAbsent(blocker.id(), new HashSet<>());
 
           // Only if the blocker hadn't already been added to the beam do we increase the
           // degree of the beam
-          if (adj.get(blocker.id()).add(beam)) {
+          if (adj.get(blocker.id()).add(beam.id())) {
             degrees.put(beam.id(), degrees.get(beam.id()) + 1);
           }
         }
@@ -120,13 +115,12 @@ public class MagicBeams {
 
       answer.add(id);
 
-      for (Beam blocked : adj.get(id)) {
-        int newDeg = degrees.get(blocked.id()) - 1;
-        // changed because with int newDeg = degrees.pu(...) would give the old degree
-        degrees.put(blocked.id(), newDeg);
+      for (int blockedId : adj.get(id)) {
+        int newDeg = degrees.get(blockedId) - 1;
+        degrees.put(blockedId, newDeg);
 
         if (newDeg == 0)
-          zeroDegree.add(blocked.id());
+          zeroDegree.add(blockedId);
       }
 
       degrees.remove(id);
