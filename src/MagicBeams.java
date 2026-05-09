@@ -64,11 +64,9 @@ public class MagicBeams {
   }
 
   /**
-   * Calculates in what order beams need to be removed to clear certain collumns
-   * of Beams
+   * Calculates in what order beams need to be removed to clear certain collumns of Beams
    * 
-   * @return list with the ids of the beams to be removed, in the order they
-   *         should be removed
+   * @return list with the ids of the beams to be removed, in the order they should be removed 
    */
   public List<Integer> solve() throws Exception {
     List<Integer> answer = new ArrayList<>();
@@ -165,7 +163,7 @@ public class MagicBeams {
    * representing the direction
    * 
    * @param dir : Character representing the direction of a Beam
-   * @return a numerical representation of that direction
+   * @return a numerical representation of that direction 
    */
   static int[] convertDirection(char dir) {
     switch (dir) {
