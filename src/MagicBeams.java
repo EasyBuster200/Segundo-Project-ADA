@@ -16,11 +16,11 @@ public class MagicBeams {
   private final int R, C, N, L;
   private int[][] grid;
   private Beam[] beams;
-  private Queue<Beam> notProcessed = new ArrayDeque<>();
-  private Set<Integer> inQueue = new HashSet<>();
-  private Map<Integer, Integer> degrees = new HashMap<>();
+  private Queue<Beam> notProcessed;
+  private Set<Integer> inQueue;
+  private Map<Integer, Integer> degrees;
   // Key: id Beam -> List of Beam ids that the key blocks
-  private Map<Integer, Set<Integer>> adj = new HashMap<>();
+  private Map<Integer, List<Integer>> adj;
 
   public MagicBeams(int R, int C, int N, int L, int B) {
     this.R = R;
@@ -29,6 +29,11 @@ public class MagicBeams {
     this.L = L;
     this.grid = new int[R][C];
     beams = new Beam[B + 1];
+
+    notProcessed = new ArrayDeque<>();
+    inQueue = new HashSet<>();
+    degrees = new HashMap<>();
+    adj = new HashMap<>();
   }
 
   /**
@@ -55,7 +60,7 @@ public class MagicBeams {
           notProcessed.add(beam);
 
         degrees.putIfAbsent(beam.id(), 0);
-        adj.putIfAbsent(beam.id(), new HashSet<>());
+        adj.putIfAbsent(beam.id(), new ArrayList<>());
       }
 
       r += direction[0];
@@ -100,13 +105,13 @@ public class MagicBeams {
             notProcessed.add(beams[blocker]);
 
           degrees.putIfAbsent(blocker, 0);
-          adj.putIfAbsent(blocker, new HashSet<>());
+          //adj.putIfAbsent(blocker, new HashSet<>());
 
           // Only if the blocker hadn't already been added to the beam do we increase the
           // degree of the beam
-          if (adj.get(blocker).add(beam.id())) {
-            degrees.put(beam.id(), degrees.get(beam.id()) + 1);
-          }
+          adj.putIfAbsent(blocker, new ArrayList<>());
+          adj.get(blocker).add(beam.id());
+          degrees.put(beam.id(), degrees.get(beam.id()) + 1);
         }
 
         blockerR += beam.direction()[0];
